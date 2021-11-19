@@ -116,7 +116,7 @@ def main(args):
         tensorboard_log=tensorboard_log,
         verbose=verbose,
     )
-    model.learn(total_timesteps=5e8)
+    model.learn(total_timesteps=1e7)
 
     logdir = model.logger.dir
     model.save(logdir)

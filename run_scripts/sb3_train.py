@@ -111,7 +111,7 @@ def main(args):
         max_grad_norm=grad_clip,
         tensorboard_log=logdir,
     )
-    model.learn(total_timesteps=5e8)
+    model.learn(total_timesteps=1e7)
 
     logdir = model.logger.dir
     model.save(logdir + "/model")
