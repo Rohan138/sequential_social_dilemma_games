@@ -59,7 +59,7 @@ def main(args):
     # Config
     rollout_len = 1000  # length of training rollouts AND length at which env is reset
     num_cpus = 12  # number of cpus
-    num_envs = 12  # number of parallel multi-agent environments
+    num_envs = 24  # number of parallel multi-agent environments
     num_agents = 2  # number of agents
     num_frames = 6  # number of frames to stack together; use >4 to avoid automatic VecTransposeImage
     features_dim = (
@@ -116,7 +116,7 @@ def main(args):
     logdir = model.logger.dir
     model.save(logdir + "/model")
     del model
-    model.load(logdir + "/model")
+    model = PPO.load(logdir + "/model")
 
 
 if __name__ == "__main__":
