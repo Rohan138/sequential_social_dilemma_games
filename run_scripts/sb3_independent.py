@@ -27,7 +27,7 @@ class CustomCNN(BaseFeaturesExtractor):
         observation_space: gym.spaces.Box,
         features_dim=128,
         view_len=7,
-        num_frames=4,
+        num_frames=6,
         fcnet_hiddens=[1024, 128],
     ):
         super(CustomCNN, self).__init__(observation_space, features_dim)
@@ -78,6 +78,7 @@ def main(args):
     verbose = 3
 
     args.num_agents = num_agents
+    args.env_name = "harvest"
     env = parallel_env(max_cycles=rollout_len, ssd_args=args)
     env = ss.observation_lambda_v0(env, lambda x, _: x["curr_obs"], lambda s: s["curr_obs"])
     env = ss.frame_stack_v1(env, num_frames)
@@ -95,7 +96,7 @@ def main(args):
         net_arch=[features_dim],
     )
 
-    tensorboard_log = "./results/sb3/cleanup_ppo_independent"
+    tensorboard_log = f"./results/sb3/{args.env_name}_ppo_independent"
 
     model = IndependentPPO(
         "CnnPolicy",
@@ -116,7 +117,7 @@ def main(args):
         tensorboard_log=tensorboard_log,
         verbose=verbose,
     )
-    model.learn(total_timesteps=1e7)
+    model.learn(total_timesteps=2e6)
 
     logdir = model.logger.dir
     model.save(logdir)

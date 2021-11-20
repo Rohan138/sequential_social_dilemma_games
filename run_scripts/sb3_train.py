@@ -76,6 +76,7 @@ def main(args):
     grad_clip = 40
 
     args.num_agents = num_agents
+    args.env_name = "harvest"
     env = parallel_env(max_cycles=rollout_len, ssd_args=args)
     env = ss.observation_lambda_v0(env, lambda x, _: x["curr_obs"], lambda s: s["curr_obs"])
     env = ss.frame_stack_v1(env, num_frames)
@@ -93,7 +94,7 @@ def main(args):
         net_arch=[features_dim],
     )
 
-    logdir = "./results/sb3/cleanup_ppo_paramsharing"
+    logdir = f"./results/sb3/{args.env_name}_ppo_paramsharing"
 
     model = PPO(
         "CnnPolicy",
@@ -111,7 +112,7 @@ def main(args):
         max_grad_norm=grad_clip,
         tensorboard_log=logdir,
     )
-    model.learn(total_timesteps=1e7)
+    model.learn(total_timesteps=2e6)
 
     logdir = model.logger.dir
     model.save(logdir + "/model")

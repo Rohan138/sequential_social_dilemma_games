@@ -140,7 +140,7 @@ class IndependentPPO(OnPolicyAlgorithm):
 
         while num_timesteps < total_timesteps:
             last_obs = self.collect_rollouts(last_obs, callbacks)
-            num_timesteps += self.num_envs * self.n_steps
+            num_timesteps += self.num_envs * self.n_steps * self.num_agents
             for polid, policy in enumerate(self.policies):
                 policy._update_current_progress_remaining(policy.num_timesteps, total_timesteps)
                 if log_interval is not None and num_timesteps % log_interval == 0:
@@ -242,7 +242,8 @@ class IndependentPPO(OnPolicyAlgorithm):
                 )
 
             for policy in self.policies:
-                policy.num_timesteps += self.num_envs
+                policy.num_timesteps += self.num_envs * self.num_agents
+                # Hacky fix for parity with parameter-shared PPO which counts by number of agent steps
 
             for callback in callbacks:
                 callback.update_locals(locals())

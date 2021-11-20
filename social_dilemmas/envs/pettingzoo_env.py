@@ -74,7 +74,7 @@ class _parallel_env(ssd_parallel_env, EzPickle):
             add_default_args(parser)
             args, _ = parser.parse_known_args()
             ssd_args["ssd_args"] = args
-        env_name = ssd_args["ssd_args"].env
+        env_name = "harvest"
         num_agents = ssd_args["ssd_args"].num_agents
         ssd_args = ssd_args["ssd_args"]
         env = get_env_creator(env_name, num_agents, ssd_args)(num_agents)
