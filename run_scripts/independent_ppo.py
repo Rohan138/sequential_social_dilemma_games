@@ -9,8 +9,10 @@ from gym.spaces import Box, Discrete
 from stable_baselines3 import PPO
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.policies import ActorCriticPolicy
-from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
-from stable_baselines3.common.utils import configure_logger, obs_as_tensor, safe_mean
+from stable_baselines3.common.type_aliases import (GymEnv, MaybeCallback,
+                                                   Schedule)
+from stable_baselines3.common.utils import (configure_logger, obs_as_tensor,
+                                            safe_mean)
 from stable_baselines3.common.vec_env import DummyVecEnv
 
 
@@ -140,21 +142,32 @@ class IndependentPPO(OnPolicyAlgorithm):
 
         while num_timesteps < total_timesteps:
             last_obs = self.collect_rollouts(last_obs, callbacks)
-            num_timesteps += self.num_envs * self.n_steps * self.num_agents
+            num_timesteps += self.num_envs * self.n_steps
             for polid, policy in enumerate(self.policies):
-                policy._update_current_progress_remaining(policy.num_timesteps, total_timesteps)
+                policy._update_current_progress_remaining(
+                    policy.num_timesteps, total_timesteps
+                )
                 if log_interval is not None and num_timesteps % log_interval == 0:
                     fps = int(policy.num_timesteps / (time.time() - policy.start_time))
                     policy.logger.record("policy_id", polid, exclude="tensorboard")
-                    policy.logger.record("time/iterations", num_timesteps, exclude="tensorboard")
-                    if len(policy.ep_info_buffer) > 0 and len(policy.ep_info_buffer[0]) > 0:
+                    policy.logger.record(
+                        "time/iterations", num_timesteps, exclude="tensorboard"
+                    )
+                    if (
+                        len(policy.ep_info_buffer) > 0
+                        and len(policy.ep_info_buffer[0]) > 0
+                    ):
                         policy.logger.record(
                             "rollout/ep_rew_mean",
-                            safe_mean([ep_info["r"] for ep_info in policy.ep_info_buffer]),
+                            safe_mean(
+                                [ep_info["r"] for ep_info in policy.ep_info_buffer]
+                            ),
                         )
                         policy.logger.record(
                             "rollout/ep_len_mean",
-                            safe_mean([ep_info["l"] for ep_info in policy.ep_info_buffer]),
+                            safe_mean(
+                                [ep_info["l"] for ep_info in policy.ep_info_buffer]
+                            ),
                         )
                     policy.logger.record("time/fps", fps)
                     policy.logger.record(
@@ -190,7 +203,10 @@ class IndependentPPO(OnPolicyAlgorithm):
                     last_obs[envid * self.num_agents + polid] is not None
                 ), f"No previous observation was provided for env_{envid}_policy_{polid}"
             all_last_obs[polid] = np.array(
-                [last_obs[envid * self.num_agents + polid] for envid in range(self.num_envs)]
+                [
+                    last_obs[envid * self.num_agents + polid]
+                    for envid in range(self.num_envs)
+                ]
             )
             policy.policy.set_training_mode(False)
             policy.rollout_buffer.reset()
@@ -219,7 +235,9 @@ class IndependentPPO(OnPolicyAlgorithm):
                         )
                     elif isinstance(self.action_space, Discrete):
                         # get integer from numpy array
-                        clipped_actions = np.array([action.item() for action in clipped_actions])
+                        clipped_actions = np.array(
+                            [action.item() for action in clipped_actions]
+                        )
                     all_clipped_actions[polid] = clipped_actions
 
             all_clipped_actions = (
@@ -229,21 +247,32 @@ class IndependentPPO(OnPolicyAlgorithm):
 
             for polid in range(self.num_agents):
                 all_obs[polid] = np.array(
-                    [obs[envid * self.num_agents + polid] for envid in range(self.num_envs)]
+                    [
+                        obs[envid * self.num_agents + polid]
+                        for envid in range(self.num_envs)
+                    ]
                 )
                 all_rewards[polid] = np.array(
-                    [rewards[envid * self.num_agents + polid] for envid in range(self.num_envs)]
+                    [
+                        rewards[envid * self.num_agents + polid]
+                        for envid in range(self.num_envs)
+                    ]
                 )
                 all_dones[polid] = np.array(
-                    [dones[envid * self.num_agents + polid] for envid in range(self.num_envs)]
+                    [
+                        dones[envid * self.num_agents + polid]
+                        for envid in range(self.num_envs)
+                    ]
                 )
                 all_infos[polid] = np.array(
-                    [infos[envid * self.num_agents + polid] for envid in range(self.num_envs)]
+                    [
+                        infos[envid * self.num_agents + polid]
+                        for envid in range(self.num_envs)
+                    ]
                 )
 
             for policy in self.policies:
-                policy.num_timesteps += self.num_envs * self.num_agents
-                # Hacky fix for parity with parameter-shared PPO which counts by number of agent steps
+                policy.num_timesteps += self.num_envs
 
             for callback in callbacks:
                 callback.update_locals(locals())
