@@ -1,4 +1,31 @@
-[![Build Status](https://travis-ci.com/eugenevinitsky/sequential_social_dilemma_games.svg?branch=master)](https://travis-ci.com/eugenevinitsky/sequential_social_dilemma_games)
+# ECE 570 README
+
+## Instructions
+To install the code and environment with all dependencies (Tested on Python 3.8.10 and Ubuntu 20.04):
+```pip install -e .```
+
+To run PPO with parameter sharing:
+```python run_scripts/sb3_train.py```
+
+To run PPO with independent learning:
+```python run_scripts/sb3_independent.py```
+
+To change hyperparameters, environment (cleanup/harvest), etc: Modify the two scripts given above as needed
+
+To view results (requires tensorboard with TF1 e.g. 1.15.x, broken on TF2):
+```tensorboard --logdir results```
+
+## Files
+This repo is a fork of [sequential-social-dilemma-games](https://github.com/eugenevinitsky/sequential_social_dilemma_games) (Vinitsky et al., 2019). It has been extensively modified and refactored by the authors to fix bugs and improve code quality. e.g. Major modifications were made to social_dilemmas/envs/map_env.py (The base SSD environment for both Cleanup and Harvest) to fix bugs such as those documented in Appendix A.1 of the [PettingZoo paper](https://arxiv.org/abs/2009.14471).
+
+The new files implemented by the authors are:
+
+- social_dilemmas/envs/pettingzoo_env.py (PettingZoo wrapper)
+- tests/test_pettingzoo.py (PettingZoo tests)
+- run_scripts/sb3_train.py (Stable-Baselines3 PPO with parameter sharing)
+- run_scripts/sb3_independent.py (Stable-Baselines3 PPO with independent learning)
+- run_scripts/independent_ppo.py (IndependentPPO reimplementation using SB3 PPO)
+
 
 # Sequential Social Dilemma Games
 This repo is an open-source implementation of DeepMind's Sequential Social Dilemma (SSD) multi-agent game-theoretic environments [[1]](https://arxiv.org/abs/1702.03037). SSDs can be thought of as analogous to spatially and temporally extended Prisoner's Dilemma-like games. The reward structure poses a dilemma because individual short-term optimal strategies lead to poor long-term outcomes for the group.
