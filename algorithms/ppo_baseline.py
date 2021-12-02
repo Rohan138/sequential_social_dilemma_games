@@ -1,15 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
-from ray.rllib.agents.ppo.ppo import (
-    choose_policy_optimizer,
-    update_kl,
-    validate_config,
-    warn_about_bad_reward_scales,
-)
+from ray.rllib.agents.ppo.ppo import execution_plan, validate_config
 from ray.rllib.agents.ppo.ppo_tf_policy import (
     KLCoeffMixin,
     ValueNetworkMixin,
-    clip_gradients,
+    compute_and_clip_gradients,
     kl_and_loss_stats,
     postprocess_ppo_gae,
     ppo_surrogate_loss,
@@ -35,9 +30,9 @@ def build_ppo_baseline_trainer(config):
         get_default_config=lambda: config,
         loss_fn=ppo_surrogate_loss,
         stats_fn=kl_and_loss_stats,
-        extra_action_fetches_fn=vf_preds_fetches,
+        extra_action_out_fn=vf_preds_fetches,
         postprocess_fn=postprocess_ppo_gae,
-        gradients_fn=clip_gradients,
+        compute_gradients_fn=compute_and_clip_gradients,
         before_init=setup_config,
         before_loss_init=setup_mixins,
         mixins=[LearningRateSchedule, EntropyCoeffSchedule, KLCoeffMixin, ValueNetworkMixin],
@@ -45,12 +40,10 @@ def build_ppo_baseline_trainer(config):
 
     ppo_trainer = build_trainer(
         name="BaselinePPOTrainer",
-        make_policy_optimizer=choose_policy_optimizer,
         default_policy=policy,
         default_config=config,
         validate_config=validate_config,
-        after_optimizer_step=update_kl,
-        after_train_result=warn_about_bad_reward_scales,
+        execution_plan=execution_plan,
         mixins=[BaselineResetConfigMixin],
     )
     return ppo_trainer

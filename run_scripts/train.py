@@ -7,7 +7,7 @@ import numpy as np
 import pytz
 import ray
 from ray import tune
-from ray.rllib.agents.registry import get_agent_class
+from ray.rllib.agents.registry import get_trainer_class
 from ray.rllib.models import ModelCatalog
 from ray.tune import Experiment
 from ray.tune.registry import register_env
@@ -67,7 +67,7 @@ def build_experiment_config_dict(args):
     def policy_mapping_fn(agent_id):
         return agent_id
 
-    agent_cls = get_agent_class(args.algorithm)
+    agent_cls = get_trainer_class(args.algorithm)
     config = copy.deepcopy(agent_cls._default_config)
 
     config["env"] = env_name
@@ -120,7 +120,7 @@ def build_experiment_config_dict(args):
                 "use_lstm": False,
                 "conv_filters": conv_filters,
                 "fcnet_hiddens": fcnet_hiddens,
-                "custom_options": {
+                "custom_model_config": {
                     "cell_size": lstm_cell_size,
                     "num_other_agents": args.num_agents - 1,
                 },
@@ -129,7 +129,7 @@ def build_experiment_config_dict(args):
     )
 
     if args.model != "baseline":
-        config["model"]["custom_options"].update(
+        config["model"]["custom_model_config"].update(
             {
                 "moa_loss_weight": args.moa_loss_weight,
                 "influence_reward_clip": 10,
@@ -144,7 +144,7 @@ def build_experiment_config_dict(args):
         )
 
     if args.model == "scm":
-        config["model"]["custom_options"].update(
+        config["model"]["custom_model_config"].update(
             {
                 "scm_loss_weight": args.scm_loss_weight,
                 "curiosity_reward_clip": 10,
@@ -229,10 +229,10 @@ def initialize_ray(args):
     ray.init(
         address=args.address,
         local_mode=args.local_mode,
-        memory=args.memory,
         object_store_memory=args.object_store_memory,
-        redis_max_memory=args.redis_max_memory,
-        include_webui=False,
+        _memory=args.memory,
+        _redis_max_memory=args.redis_max_memory,
+        include_dashboard=False,
     )
 
 
@@ -334,7 +334,7 @@ def create_hparam_tune_dict(model, is_config=False):
 
     hparam_dict = {
         **baseline_options,
-        "model": {"custom_options": model_options},
+        "model": {"custom_model_config": model_options},
     }
     return hparam_dict
 

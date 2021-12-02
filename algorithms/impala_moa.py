@@ -9,21 +9,15 @@ import logging
 import gym
 import numpy as np
 from ray.rllib.agents.impala import DEFAULT_CONFIG
-from ray.rllib.agents.impala.impala import (
-    OverrideDefaultResourceRequest,
-    defer_make_workers,
-    make_aggregators_and_optimizer,
-    validate_config,
-)
+from ray.rllib.agents.impala.impala import OverrideDefaultResourceRequest, validate_config
 from ray.rllib.agents.impala.vtrace_tf_policy import VTraceLoss, choose_optimizer, clip_gradients
-from ray.rllib.agents.impala.vtrace_tf_policy import validate_config as validate_config_policy
 from ray.rllib.agents.trainer_template import build_trainer
 from ray.rllib.models.tf.tf_action_dist import Categorical
 from ray.rllib.policy.sample_batch import SampleBatch
 from ray.rllib.policy.tf_policy import EntropyCoeffSchedule, LearningRateSchedule
 from ray.rllib.policy.tf_policy_template import build_tf_policy
 from ray.rllib.utils import try_import_tf
-from ray.rllib.utils.explained_variance import explained_variance
+from ray.rllib.utils.tf_ops import explained_variance
 
 from algorithms.common_funcs_moa import (
     EXTRINSIC_REWARD,
@@ -38,7 +32,7 @@ from algorithms.common_funcs_moa import (
 MOA_CONFIG = DEFAULT_CONFIG
 
 
-tf = try_import_tf()
+_, tf, _ = try_import_tf()
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +203,6 @@ def get_moa_vtrace_policy():
         optimizer_fn=choose_optimizer,
         gradients_fn=clip_gradients,
         extra_action_fetches_fn=add_behaviour_logits,
-        before_init=validate_config_policy,
         before_loss_init=setup_mixins,
         mixins=[LearningRateSchedule, EntropyCoeffSchedule] + get_moa_mixins(),
         get_batch_divisibility_req=lambda p: p.config["rollout_fragment_length"],
@@ -218,12 +211,7 @@ def get_moa_vtrace_policy():
 
 
 def choose_policy(config):
-    if config["vtrace"]:
-        return get_moa_vtrace_policy()
-    else:
-        import sys
-
-        sys.exit("Hey, set vtrace to true")
+    return get_moa_vtrace_policy()
 
 
 def build_impala_moa_trainer(config):
@@ -233,8 +221,6 @@ def build_impala_moa_trainer(config):
         default_policy=get_moa_vtrace_policy(),
         validate_config=validate_config,
         get_policy_class=choose_policy,
-        make_workers=defer_make_workers,
-        make_policy_optimizer=make_aggregators_and_optimizer,
         mixins=[OverrideDefaultResourceRequest],
     )
     return moa_impala_trainer

@@ -10,8 +10,7 @@ from ray.rllib.policy.sample_batch import SampleBatch
 from ray.rllib.policy.tf_policy import LearningRateSchedule
 from ray.rllib.policy.tf_policy_template import build_tf_policy
 from ray.rllib.utils import try_import_tf
-from ray.rllib.utils.explained_variance import explained_variance
-from ray.rllib.utils.tf_ops import make_tf_callable
+from ray.rllib.utils.tf_ops import explained_variance, make_tf_callable
 
 from algorithms.common_funcs_moa import (
     EXTRINSIC_REWARD,
@@ -23,7 +22,7 @@ from algorithms.common_funcs_moa import (
     setup_moa_mixins,
 )
 
-tf = try_import_tf()
+_, tf, _ = try_import_tf()
 
 
 class A3CLoss(object):

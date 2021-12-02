@@ -1,14 +1,14 @@
 import numpy as np
 from ray.rllib.models.modelv2 import ModelV2
 from ray.rllib.models.tf.misc import normc_initializer
-from ray.rllib.models.tf.recurrent_tf_modelv2 import RecurrentTFModelV2
+from ray.rllib.models.tf.recurrent_net import RecurrentNetwork
 from ray.rllib.utils import try_import_tf
 from ray.rllib.utils.annotations import override
 
-tf = try_import_tf()
+_, tf, _ = try_import_tf()
 
 
-class ActorCriticLSTM(RecurrentTFModelV2):
+class ActorCriticLSTM(RecurrentNetwork):
     def __init__(
         self,
         obs_space,
@@ -64,7 +64,7 @@ class ActorCriticLSTM(RecurrentTFModelV2):
 
         self.rnn_model = tf.keras.Model(inputs=inputs, outputs=outputs, name="Actor_Critic_Model")
 
-    @override(RecurrentTFModelV2)
+    @override(RecurrentNetwork)
     def forward_rnn(self, input_dict, state, seq_lens):
         """
         Forward pass through the LSTM.

@@ -6,7 +6,7 @@ from ray.rllib.utils.annotations import override
 from algorithms.common_funcs_baseline import BaselineResetConfigMixin
 from algorithms.common_funcs_moa import MOAResetConfigMixin
 
-tf = try_import_tf()
+_, tf, _ = try_import_tf()
 
 
 PREDICTED_OBSERVATIONS = "pred_obs"
@@ -16,7 +16,7 @@ INVERSE_MODEL_LOSS = "inverse_model_loss"
 
 class SocialCuriosityScheduleMixIn(object):
     def __init__(self, config):
-        config = config["model"]["custom_options"]
+        config = config["model"]["custom_model_config"]
         self.baseline_curiosity_reward_weight = config["curiosity_reward_weight"]
         if any(
             config[key] is None
@@ -133,7 +133,7 @@ def scm_fetches(policy):
 
 class SCMConfigInitializerMixIn(object):
     def __init__(self, config):
-        config = config["model"]["custom_options"]
+        config = config["model"]["custom_model_config"]
         self.scm_loss_weight = tf.get_variable(
             "scm_loss_weight", initializer=config["scm_loss_weight"], trainable=False
         )
@@ -153,17 +153,17 @@ class SCMConfigInitializerMixIn(object):
 class SCMResetConfigMixin(object):
     @staticmethod
     def reset_policies(policies, new_config, session):
-        custom_options = new_config["model"]["custom_options"]
+        custom_model_config = new_config["model"]["custom_model_config"]
         for policy in policies:
-            policy.scm_loss_weight.load(custom_options["scm_loss_weight"], session=session)
-            policy.compute_curiosity_reward_weight = lambda: custom_options[
+            policy.scm_loss_weight.load(custom_model_config["scm_loss_weight"], session=session)
+            policy.compute_curiosity_reward_weight = lambda: custom_model_config[
                 "curiosity_reward_weight"
             ]
             policy.forward_loss_weight.load(
-                custom_options["scm_forward_vs_inverse_loss_weight"], session=session
+                custom_model_config["scm_forward_vs_inverse_loss_weight"], session=session
             )
             policy.inverse_loss_weight.load(
-                1 - custom_options["scm_forward_vs_inverse_loss_weight"], session=session
+                1 - custom_model_config["scm_forward_vs_inverse_loss_weight"], session=session
             )
 
     def reset_config(self, new_config):
@@ -185,7 +185,7 @@ def get_curiosity_mixins():
 
 
 def validate_scm_config(config):
-    config = config["model"]["custom_options"]
+    config = config["model"]["custom_model_config"]
     if config["curiosity_reward_weight"] < 0:
         raise ValueError("Influence reward weight must be >= 0.")
     weight = config["scm_forward_vs_inverse_loss_weight"]

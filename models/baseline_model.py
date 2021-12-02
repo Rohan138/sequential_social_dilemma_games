@@ -1,5 +1,5 @@
 from ray.rllib.models.modelv2 import ModelV2
-from ray.rllib.models.tf.recurrent_tf_modelv2 import RecurrentTFModelV2
+from ray.rllib.models.tf.recurrent_net import RecurrentNetwork
 from ray.rllib.policy.rnn_sequencing import add_time_dimension
 from ray.rllib.utils import try_import_tf
 from ray.rllib.utils.annotations import override
@@ -7,10 +7,10 @@ from ray.rllib.utils.annotations import override
 from models.actor_critic_lstm import ActorCriticLSTM
 from models.common_layers import build_conv_layers, build_fc_layers
 
-tf = try_import_tf()
+_, tf, _ = try_import_tf()
 
 
-class BaselineModel(RecurrentTFModelV2):
+class BaselineModel(RecurrentNetwork):
     def __init__(self, obs_space, action_space, num_outputs, model_config, name):
         """
         The baseline model without social influence from the social influence paper.
@@ -44,7 +44,7 @@ class BaselineModel(RecurrentTFModelV2):
         self.encoder_model.summary()
 
         # Action selection/value function
-        cell_size = model_config["custom_options"].get("cell_size")
+        cell_size = model_config["custom_model_config"].get("cell_size")
         self.policy_model = ActorCriticLSTM(
             last_layer.shape[-1],
             action_space,
@@ -68,7 +68,8 @@ class BaselineModel(RecurrentTFModelV2):
         :return: The policy logits and state.
         """
         trunk = self.encoder_model(input_dict["obs"]["curr_obs"])
-        new_dict = {"curr_obs": add_time_dimension(trunk, seq_lens)}
+        max_seq_len = tf.shape(trunk)[0] // tf.shape(seq_lens)[0]
+        new_dict = {"curr_obs": add_time_dimension(trunk, max_seq_len=max_seq_len)}
 
         output, new_state = self.forward_rnn(new_dict, state, seq_lens)
         return tf.reshape(output, [-1, self.num_outputs]), new_state

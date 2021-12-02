@@ -1,13 +1,8 @@
-from ray.rllib.agents.ppo.ppo import (
-    choose_policy_optimizer,
-    update_kl,
-    validate_config,
-    warn_about_bad_reward_scales,
-)
+from ray.rllib.agents.ppo.ppo import UpdateKL, validate_config, warn_about_bad_reward_scales
 from ray.rllib.agents.ppo.ppo_tf_policy import (
     KLCoeffMixin,
     ValueNetworkMixin,
-    clip_gradients,
+    compute_and_clip_gradients,
     postprocess_ppo_gae,
     setup_config,
 )
@@ -35,7 +30,7 @@ from algorithms.ppo_moa import (
     validate_moa_config,
 )
 
-tf = try_import_tf()
+_, tf, _ = try_import_tf()
 
 
 def loss_with_scm(policy, model, dist_class, train_batch):
@@ -128,7 +123,7 @@ def build_ppo_scm_trainer(scm_config):
         stats_fn=extra_scm_stats,
         extra_action_fetches_fn=extra_scm_fetches,
         postprocess_fn=postprocess_ppo_scm,
-        gradients_fn=clip_gradients,
+        compute_gradients_fn=compute_and_clip_gradients,
         before_init=setup_config,
         before_loss_init=setup_ppo_scm_mixins,
         mixins=[LearningRateSchedule, EntropyCoeffSchedule, KLCoeffMixin, ValueNetworkMixin]
@@ -139,11 +134,9 @@ def build_ppo_scm_trainer(scm_config):
     scm_ppo_trainer = build_trainer(
         name=trainer_name,
         default_policy=scm_ppo_policy,
-        make_policy_optimizer=choose_policy_optimizer,
         default_config=scm_config,
         validate_config=validate_ppo_scm_config,
-        after_optimizer_step=update_kl,
         after_train_result=warn_about_bad_reward_scales,
-        mixins=[SCMResetConfigMixin],
+        mixins=[SCMResetConfigMixin, UpdateKL],
     )
     return scm_ppo_trainer
